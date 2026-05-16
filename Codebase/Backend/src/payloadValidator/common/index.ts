@@ -1,0 +1,41 @@
+import { z } from 'zod';
+
+// Filename: 1-255 chars, no path separators, no null bytes, no control chars.
+const FILENAME_BAD_CHARS = /[\\/\x00-\x1f]/;
+
+export const filenameSchema = z
+  .string()
+  .min(1, 'filename required')
+  .max(255, 'filename too long')
+  .refine((v) => !FILENAME_BAD_CHARS.test(v), {
+    message: 'filename contains path separators or control characters'
+  });
+
+// Raised from 500 to 5000 so the empirical complexity-regression sweep
+// can reach the input-size band where the analyzer's per-token variable
+// cost rises above the catalog-load floor (~10 ms). At 500 tokens/file
+// every submission processed in 3-9 ms, which made the admin's
+// /api/admin/stats/complexity-data fit collapse to noise. 5000 tokens
+// per file × 5 files = 25 000 tokens / submission, matching the upper
+// end of the local synthetic sweep where R² ≈ 0.93 (full range) /
+// 0.98 (normal case) per tools/thesis-sim/regression.md.
+export const MAX_TOKENS_PER_FILE = 5000;
+
+// Whitespace-split word count — simple, transparent, language-agnostic.
+// Keeps per-file AI payload small enough to avoid Gemini overload.
+export function estimateTokens(code: string): number {
+  return code.trim().split(/\s+/).filter(Boolean).length;
+}
+
+// Single C++ source file in the multi-file submission shape.
+export const fileEntrySchema = z.object({
+  code: z
+    .string()
+    .min(1)
+    .max(1_000_000)
+    .refine(
+      (v) => estimateTokens(v) <= MAX_TOKENS_PER_FILE,
+      { message: `source file exceeds ${MAX_TOKENS_PER_FILE}-token limit` }
+    ),
+  name: filenameSchema
+});

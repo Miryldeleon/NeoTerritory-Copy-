@@ -1,0 +1,97 @@
+{
+  "pattern_id": "creational.method_chaining",
+  "pattern_family": "creational",
+  "pattern_name": "MethodChaining",
+  "enabled": true,
+  "signature_categories": [
+    "self_return"
+  ],
+  "lexeme_identifiers": {
+    "chain_return":    ["return", "*", "this", "&"],
+    "configurator":    ["enable", "disable", "set", "configure", "with", "add",
+                        "append", "toggle", "reset", "assign", "put", "use",
+                        "apply", "include", "exclude", "allow", "deny"],
+    "fluent_markers":  ["fluent", "chain", "builder", "config", "options",
+                        "settings", "params", "query"]
+  },
+  "ordered_checks": [
+    {
+      "id": "class_introducer",
+      "expected_kind": "Keyword",
+      "expected_lexeme_any_of": ["class", "struct"]
+    },
+    {
+      "id": "class_name",
+      "expected_kind": "Identifier",
+      "capture_as": "class_name",
+      "document_as": "fluent_class"
+    },
+    {
+      "id": "open_class_brace",
+      "expected_kind": "Punctuation",
+      "expected_lexeme_any_of": ["{"]
+    },
+    {
+      "id": "fluent_return_signature",
+      "expected_kind": "Operator",
+      "expected_lexeme_any_of": ["&"],
+      "document_as": "fluent_setter_return"
+    },
+    {
+      "id": "fluent_return_keyword",
+      "expected_kind": "Keyword",
+      "expected_lexeme_any_of": ["return"]
+    },
+    {
+      "id": "fluent_return_this",
+      "expected_kind": "Keyword",
+      "expected_lexeme_any_of": ["this"],
+      "document_as": "fluent_self_return"
+    }
+  ],
+
+  "implementation_template": {
+    "callsites": [
+      {
+        "id": "fluent_self_return",
+        "shape_regex": "return\\s+\\*\\s*this\\s*;",
+        "weight": 0.55,
+        "describe": "Method returns *this — fluent self-reference"
+      },
+      {
+        "id": "fluent_setter_signature",
+        "shape_regex": "{class_name}\\s*&\\s+\\w+\\s*\\([^)]*\\)\\s*(const\\s*)?\\{",
+        "weight": 0.5,
+        "describe": "Method returns ClassName& — fluent return type"
+      },
+      {
+        "id": "two_chained_member_calls",
+        "shape_regex": "\\.\\s*\\w+\\s*\\([^)]*\\)\\s*\\.\\s*\\w+\\s*\\(",
+        "weight": 0.4,
+        "describe": "Two member calls chained with . — chaining usage"
+      },
+      {
+        "id": "two_chained_arrow_calls",
+        "shape_regex": "->\\s*\\w+\\s*\\([^)]*\\)\\s*->\\s*\\w+\\s*\\(",
+        "weight": 0.4,
+        "describe": "Two member calls chained with -> — chaining usage on pointers"
+      },
+      {
+        "id": "three_or_more_chain",
+        "shape_regex": "\\.\\s*\\w+\\s*\\([^)]*\\)\\s*\\.\\s*\\w+\\s*\\([^)]*\\)\\s*\\.\\s*\\w+\\s*\\(",
+        "weight": 0.4,
+        "describe": "Three or more chained calls — strong fluent usage signal"
+      }
+    ],
+    "expected_collaborators": [],
+    "global_functions": [],
+    "negative_signals": [
+      {
+        "id": "no_self_return",
+        "shape_regex": "class\\s+{class_name}\\s*[:\\{][\\s\\S]{0,1200}\\}(?![\\s\\S]*return\\s+\\*\\s*this)",
+        "weight": -0.3,
+        "describe": "No `return *this` anywhere — chaining is unlikely"
+      }
+    ]
+  }
+}

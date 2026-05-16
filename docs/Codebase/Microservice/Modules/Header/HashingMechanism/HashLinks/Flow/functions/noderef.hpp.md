@@ -1,0 +1,34 @@
+# noderef.hpp
+
+- Source document: [parse_tree_hash_links.hpp.md](../../parse_tree_hash_links.hpp.md)
+- Purpose: decoupled implementation logic for a future code unit.
+
+### NodeRef
+This declaration introduces a shared type that other files compile against.
+
+Inside the body, it mainly handles declare a shared type and expose the compile-time contract.
+
+What it does:
+- declare a shared type
+- expose the compile-time contract
+
+Contract details:
+- `NodeRef` should distinguish a registry head pointer from a child path reference.
+- Head refs identify the class or function subtree owner.
+- Child refs identify exact internal locations under that head, such as a member call lexeme or statement node.
+
+Flow:
+```mermaid
+flowchart TD
+    Start["NodeRef"]
+    N0["Identify head"]
+    N1["Keep child path"]
+    N2["Expose contract"]
+    N3["Hand back"]
+    End["Return"]
+    Start --> N0
+    N0 --> N1
+    N1 --> N2
+    N2 --> N3
+    N3 --> End
+```

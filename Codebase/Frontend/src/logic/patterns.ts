@@ -1,0 +1,314 @@
+import { Annotation } from '../types/api';
+
+export interface PatternColor {
+  bg: string;
+  border: string;
+  text: string;
+}
+
+// Confident pattern -> vivid color. Multi-pattern ambiguity is rendered grey
+// elsewhere (see SourceView's AMBIGUOUS_COLOR), so these are reserved for the
+// "we know exactly which pattern fired here" case.
+export const PATTERN_COLORS: Record<string, PatternColor> = {
+  Factory:        { bg: 'rgba(255, 179, 0, 0.16)',  border: '#ffb300', text: '#ffce4f' },
+  Singleton:      { bg: 'rgba(45, 107, 255, 0.18)', border: '#2d6bff', text: '#7fa4ff' },
+  Builder:        { bg: 'rgba(138, 43, 226, 0.20)', border: '#8a2be2', text: '#c18bff' },
+  MethodChaining: { bg: 'rgba(0, 209, 216, 0.16)',  border: '#00d1d8', text: '#69f7ff' },
+  Adapter:        { bg: 'rgba(255, 179, 0, 0.18)',  border: '#ffb300', text: '#ffd66b' },
+  Decorator:      { bg: 'rgba(166, 255, 0, 0.14)',  border: '#a6ff00', text: '#cbff72' },
+  Proxy:          { bg: 'rgba(138, 43, 226, 0.18)', border: '#8a2be2', text: '#bd8cff' },
+  Strategy:       { bg: 'rgba(166, 255, 0, 0.14)',  border: '#a6ff00', text: '#c8ff64' },
+  Observer:       { bg: 'rgba(0, 209, 216, 0.14)',  border: '#00d1d8', text: '#69f7ff' },
+  Composite:      { bg: 'rgba(45, 107, 255, 0.18)', border: '#2d6bff', text: '#89adff' },
+  Iterator:       { bg: 'rgba(166, 255, 0, 0.14)',  border: '#a6ff00', text: '#caff68' },
+  Visitor:        { bg: 'rgba(138, 43, 226, 0.20)', border: '#8a2be2', text: '#d1a3ff' },
+  Command:        { bg: 'rgba(255, 179, 0, 0.18)',  border: '#ffb300', text: '#ffd66b' },
+  Pimpl:          { bg: 'rgba(0, 209, 216, 0.14)',   border: '#00d1d8', text: '#7df8ff' },
+  // Review is the "we don't know" bucket. Brighter mid-greys (slate-400/300)
+  // so the badge remains visible on both dark and light surfaces. The dark
+  // text variant is only swapped to a lighter slate at runtime when light
+  // mode is active (see colorFor() / AMBIGUOUS_COLOR theming).
+  Review:         { bg: 'rgba(148, 163, 184, 0.18)', border: '#94a3b8', text: '#cbd5e1' }
+};
+
+function hueFor(key: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return Math.abs(h) % 360;
+}
+
+function generatedColor(key: string): PatternColor {
+  const h = hueFor(key || 'default');
+  return {
+    bg:     `oklch(72% 0.18 ${h} / 0.10)`,
+    border: `oklch(72% 0.18 ${h})`,
+    text:   `oklch(85% 0.14 ${h})`
+  };
+}
+
+const PATTERN_COLORS_CI: Record<string, PatternColor> = Object.fromEntries(
+  Object.entries(PATTERN_COLORS).map(([k, v]) => [k.toLowerCase(), v])
+);
+
+// WCAG 2.1 relative luminance. Maps an sRGB triple to the perceived
+// luminance L ∈ [0, 1]. Used to test contrast ratios against the current
+// surface colour so badge/text stays legible regardless of theme.
+function srgbChannelToLinear(c: number): number {
+  const cs = c / 255;
+  return cs <= 0.03928 ? cs / 12.92 : Math.pow((cs + 0.055) / 1.055, 2.4);
+}
+function relativeLuminance(r: number, g: number, b: number): number {
+  return 0.2126 * srgbChannelToLinear(r)
+       + 0.7152 * srgbChannelToLinear(g)
+       + 0.0722 * srgbChannelToLinear(b);
+}
+function contrastRatio(l1: number, l2: number): number {
+  const a = Math.max(l1, l2);
+  const b = Math.min(l1, l2);
+  return (a + 0.05) / (b + 0.05);
+}
+function parseHex(hex: string): [number, number, number] | null {
+  const m = (hex || '').trim().match(/^#?([\da-f]{3}|[\da-f]{6})$/i);
+  if (!m) return null;
+  const h = m[1].length === 3
+    ? m[1].split('').map(c => c + c).join('')
+    : m[1];
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+// Lift or darken an sRGB colour until contrast against the surface meets a
+// WCAG-AA threshold (3.0:1 for badges, 4.5:1 for body text).
+export function ensureReadableContrast(hex: string, target: number = 3.0): string {
+  const rgb = parseHex(hex);
+  if (!rgb) return hex;
+  const isLightTheme = typeof document !== 'undefined'
+    && document.documentElement.getAttribute('data-theme') === 'light';
+  // Surface: rough mid-tone for both themes. Exact bg-hex would be #0b0c10
+  // (dark) or #ffffff (light); we use the panel surface for badge contrast.
+  const bg = isLightTheme ? [255, 255, 255] : [19, 20, 26];
+  const bgL = relativeLuminance(bg[0], bg[1], bg[2]);
+  let [r, g, b] = rgb;
+  let safety = 0;
+  while (contrastRatio(relativeLuminance(r, g, b), bgL) < target && safety < 60) {
+    safety += 1;
+    if (isLightTheme) {
+      // Light surface: nudge toward darker.
+      r = Math.max(0, r - 4);
+      g = Math.max(0, g - 4);
+      b = Math.max(0, b - 4);
+    } else {
+      // Dark surface: nudge toward lighter.
+      r = Math.min(255, r + 4);
+      g = Math.min(255, g + 4);
+      b = Math.min(255, b + 4);
+    }
+  }
+  return `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
+// "Review" is a sentinel bucket for AI-only commentary / unrecognised
+// annotations — NOT a design pattern. Callers that count ambiguity or
+// render rival chips must exclude it via this helper. Otherwise a class
+// with one real pattern + one Review annotation would falsely register
+// as ambiguous and surface "Review" as a selectable alternative, which
+// makes no sense to the user.
+export function isRealPattern(key: string | null | undefined): boolean {
+  if (!key) return false;
+  return canonicalPatternName(key) !== 'Review';
+}
+
+// Variant -> canonical short name. Covers the common shapes the
+// microservice and AI layer emit: dotted family ids (creational.factory),
+// method-name suffixes (factory_method), structural-class suffixes
+// (adapter_class), and aliases (policy → Strategy, fluent_interface →
+// MethodChaining). Unrecognised values fall through to "Review".
+const CANONICAL_LOOKUP: Record<string, string> = {
+  // Creational
+  factory:           'Factory',
+  factories:         'Factory',
+  factory_method:    'Factory',
+  factorymethod:     'Factory',
+  abstract_factory:  'Factory',
+  abstractfactory:   'Factory',
+  simple_factory:    'Factory',
+  simplefactory:     'Factory',
+  static_factory:    'Factory',
+  staticfactory:     'Factory',
+  singleton:         'Singleton',
+  singletons:        'Singleton',
+  builder:           'Builder',
+  builders:          'Builder',
+  builder_class:     'Builder',
+  builderclass:      'Builder',
+  method_chaining:   'MethodChaining',
+  methodchaining:    'MethodChaining',
+  fluent:            'MethodChaining',
+  fluent_interface:  'MethodChaining',
+  fluentinterface:   'MethodChaining',
+  pimpl:             'Pimpl',
+  pointer_to_impl:   'Pimpl',
+  // Structural
+  adapter:           'Adapter',
+  adapter_class:     'Adapter',
+  adapterclass:      'Adapter',
+  decorator:         'Decorator',
+  decorator_class:   'Decorator',
+  decoratorclass:    'Decorator',
+  proxy:             'Proxy',
+  proxy_class:       'Proxy',
+  proxyclass:        'Proxy',
+  composite:         'Composite',
+  composite_class:   'Composite',
+  // Behavioural
+  strategy:          'Strategy',
+  policy:            'Strategy',
+  observer:          'Observer',
+  iterator:          'Iterator',
+  visitor:           'Visitor',
+  command:           'Command',
+};
+
+// Canonicalise any pattern identifier (raw dotted, snake_case, alias, …)
+// to one of the 14 short names in PATTERN_COLORS. Unknown → "Review".
+//
+// Used by LinePopover to dedupe annotation cards rendering the same
+// pattern under two different ids (e.g. "creational.factory" + "Factory"),
+// and as the second-chance lookup inside colorFor so dotted ids share
+// the canonical palette colour.
+export function canonicalPatternName(rawKey: string | null | undefined): string {
+  const raw = (rawKey || '').trim();
+  if (!raw) return 'Review';
+  // Already a palette short name? Done.
+  if (PATTERN_COLORS[raw]) return raw;
+  const lower = raw.toLowerCase();
+  if (PATTERN_COLORS_CI[lower]) {
+    // Recover the original-cased palette key (e.g. "factory" -> "Factory").
+    const match = Object.keys(PATTERN_COLORS).find((k) => k.toLowerCase() === lower);
+    if (match) return match;
+  }
+  // Drop the family prefix ("creational.", "structural.", "behavioural.").
+  const stripped  = lower.replace(/^[a-z]+\./, '');
+  const condensed = stripped.replace(/[^a-z0-9]+/g, '');
+  if (CANONICAL_LOOKUP[stripped])  return CANONICAL_LOOKUP[stripped];
+  if (CANONICAL_LOOKUP[condensed]) return CANONICAL_LOOKUP[condensed];
+  // Tokenise on both non-alphanum AND CamelCase boundaries so subtype
+  // labels like "StrategyConcrete" / "FactoryProduct" / "BuilderClass"
+  // resolve cleanly via their leading word. The microservice and AI
+  // layer emit these subtype names freely; without CamelCase splitting
+  // they'd canonicalize to "Review" and the line would render with no
+  // colour even though its annotation cards correctly say "Strategy".
+  const camelSplit = raw.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+  const tokens = camelSplit
+    .toLowerCase()
+    .replace(/^[a-z]+\./, '')
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+  for (const tok of tokens) {
+    if (CANONICAL_LOOKUP[tok]) return CANONICAL_LOOKUP[tok];
+  }
+  return 'Review';
+}
+
+export function colorFor(key: string): PatternColor {
+  if (PATTERN_COLORS[key]) return PATTERN_COLORS[key];
+  const lower = (key || '').toLowerCase();
+  if (PATTERN_COLORS_CI[lower]) return PATTERN_COLORS_CI[lower];
+  // Canonical lookup handles dotted forms (creational.factory → Factory)
+  // and variants (factory_method → Factory) so the colour stays stable
+  // regardless of which raw form the matcher emitted.
+  const canonical = canonicalPatternName(key);
+  if (canonical !== 'Review' && PATTERN_COLORS[canonical]) {
+    return PATTERN_COLORS[canonical];
+  }
+  return generatedColor(key);
+}
+
+export function patternFromAnnotation(annotation: Annotation): string {
+  // The microservice tags every annotation with the pattern that triggered it;
+  // we prefer the explicit patternKey, falling back to parsing the legacy
+  // "<PatternName> :: <anchor>" title format. Unknown names still flow through
+  // colorFor's hash-based generator so every pattern reads as a distinct color
+  // — never grey (grey is reserved for ambiguous lines).
+  if (annotation.patternKey) return annotation.patternKey;
+  const title = annotation.title || '';
+  const head = title.split(' :: ')[0] || annotation.stage || 'Review';
+  return head;
+}
+
+export const USAGE_KIND_LABEL: Record<string, string> = {
+  declaration:    'declared',
+  member_call:    '. call',
+  arrow_call:     '-> call',
+  qualified_call: ':: static',
+  make_unique:    'make_unique',
+  make_shared:    'make_shared',
+  new_ctor:       'new'
+};
+
+// Neutral grey used when a class scope has tied or no dominant pattern.
+// Two variants so the grey stays readable on both backgrounds: dark mode
+// gets a lighter slate that pops on the dark surface, light mode keeps the
+// classic darker slate. AMBIGUOUS_COLOR is a getter so it reflects the
+// current `<html data-theme>` at every call.
+const AMBIGUOUS_DARK: PatternColor = {
+  bg:     'rgba(148, 163, 184, 0.18)',
+  border: 'rgba(203, 213, 225, 1)',
+  text:   'rgba(226, 232, 240, 1)',
+};
+const AMBIGUOUS_LIGHT: PatternColor = {
+  bg:     'rgba(100, 116, 139, 0.12)',
+  border: 'rgba(100, 116, 139, 1)',
+  text:   'rgba(71, 85, 105, 1)',
+};
+function isLightMode(): boolean {
+  if (typeof document === 'undefined') return false;
+  return document.documentElement.getAttribute('data-theme') === 'light';
+}
+export function getAmbiguousColor(): PatternColor {
+  return isLightMode() ? AMBIGUOUS_LIGHT : AMBIGUOUS_DARK;
+}
+// Backwards-compatible export. Acts as a live proxy: every property read
+// resolves to the current theme's variant. Existing imports keep working
+// without code changes.
+export const AMBIGUOUS_COLOR: PatternColor = new Proxy({} as PatternColor, {
+  get(_target, prop: keyof PatternColor) {
+    return getAmbiguousColor()[prop];
+  }
+}) as PatternColor;
+
+function parseRgba(s: string): [number, number, number, number] {
+  const m = s.match(/rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)(?:[,\s\/]+([\d.]+))?\s*\)/);
+  if (!m) return [100, 116, 139, 0.15];
+  return [+m[1], +m[2], +m[3], m[4] != null ? +m[4] : 1];
+}
+
+function blendRgbaStr(a: string, b: string, t: number): string {
+  const [r1, g1, b1, a1] = parseRgba(a);
+  const [r2, g2, b2, a2] = parseRgba(b);
+  const r = Math.round(r1 + (r2 - r1) * t);
+  const g = Math.round(g1 + (g2 - g1) * t);
+  const bl = Math.round(b1 + (b2 - b1) * t);
+  const alpha = +(a1 + (a2 - a1) * t).toFixed(3);
+  return `rgba(${r}, ${g}, ${bl}, ${alpha})`;
+}
+
+// Linearly interpolate between two PatternColors.
+// t=0 → color a, t=1 → color b (AMBIGUOUS_COLOR in practice).
+export function blendColor(a: PatternColor, b: PatternColor, t: number): PatternColor {
+  if (t <= 0) return a;
+  if (t >= 1) return b;
+  return {
+    bg:     blendRgbaStr(a.bg, b.bg, t),
+    border: blendRgbaStr(a.border, b.border, t),
+    text:   blendRgbaStr(a.text, b.text, t),
+  };
+}
+
+export function fmtDate(value: string | undefined | null): string {
+  if (!value) return '—';
+  const d = new Date(String(value).replace(' ', 'T') + 'Z');
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleString();
+}

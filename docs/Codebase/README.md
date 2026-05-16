@@ -1,0 +1,101 @@
+# Codebase Mirror
+
+- Folder: docs/Codebase
+- Descendant source docs: 151
+- Generated on: 2026-04-23
+
+## Logic Summary
+Top-level logical view of the generated codebase mirror. It groups the repository into the frontend live-analysis surface, backend service code, infrastructure automation, legacy transform samples, repository hygiene, and the C++ microservice core.
+
+## Blueprint Boundary
+This `docs/Codebase` tree is the implementation mirror. Folders and Markdown files here should map to current or planned code folders/files.
+
+Granular Mermaid details stay inside the Markdown file they describe. Do not create documentation-only detail folders inside this mirror.
+
+Every normal folder in this tree should be safe to treat as a current or planned implementation folder.
+
+## Subsystem Story
+This folder should mostly route readers into subsystem folders. Microservice-only build and editor artifacts belong under `Microservice/`, not beside Backend, Frontend, and Infrastructure.
+
+## Folder Flow
+
+### Block 1 - Folder Flow Details
+#### Slice 1 - Continue Local Flow
+```mermaid
+flowchart TD
+    N0["Folder Entry"]
+    N1["Study Bootstrap scripts docs"]
+    N2["Study Project notes docs"]
+    N3["Study Validation scripts docs"]
+    N4["Open Backend service folders"]
+    N5["Open Frontend prototype folders"]
+    N6["Open Microservice core folders"]
+    N7["More local items?"]
+    N8["Open Frontend prototype folders"]
+    N9["More local items?"]
+    N0 --> N1
+    N1 --> N2
+    N2 --> N3
+    N3 --> N4
+    N4 --> N5
+    N5 --> N6
+    N6 --> N7
+    N7 --> N8
+    N8 --> N9
+```
+
+#### Slice 2 - Continue Local Flow
+```mermaid
+flowchart TD
+    N0["Open Legacy transform samples folders"]
+    N1["More local items?"]
+    N2["Open Infrastructure automation folders"]
+    N3["More local items?"]
+    N4["Confirm subsystem boundaries"]
+    N5["More local items?"]
+    N6["Folder Exit"]
+    N0 --> N1
+    N1 --> N2
+    N2 --> N3
+    N3 --> N4
+    N4 --> N5
+    N5 --> N6
+```
+
+## Child Folders By Logic
+### Backend Service
+These child folders continue the subsystem by covering Backend service surface for live class analysis, AI documentation, structured logs, and HTTP runtime internals under src.
+- Backend/ : Backend service surface for live class analysis, AI documentation, and HTTP runtime internals.
+
+### Frontend Prototype
+These child folders continue the subsystem by covering Frontend prototype shell. This area groups the browser entrypoint with route fragments, scripts, styles, and the class-boundary trigger.
+- Frontend/ : Frontend prototype shell for live class-boundary analysis and rendered results.
+
+### Microservice Core
+These child folders continue the subsystem by covering C++ executable and module tree that implement the parser, detector, documentation tagging, rendering, and report pipeline.
+- Microservice/ : C++ executable and module tree that implement the parser, detector, documentation tagging, rendering, and report pipeline.
+
+### Legacy Transform Samples
+These child folders continue the subsystem by covering Legacy pattern-to-pattern transform examples kept for historical comparison with the current tagging-first system.
+- LegacyPatternTransformSamples/ : Legacy pattern-to-pattern transform examples kept for historical comparison with the current tagging-first system.
+
+### Infrastructure Automation
+These child folders continue the subsystem by covering Infrastructure automation and runtime environment assembly for local containerized execution.
+- Infrastructure/ : Infrastructure automation and runtime environment assembly for local containerized execution.
+
+## Documents By Logic
+### Root Entry Scripts
+The repo collapses all root scripts into a single cross-platform dispatcher. Subcommands: `dev` (default), `setup`, `k8s`, `browser`, `test`. Universal flags include `-Lan` / `--lan` for LAN exposure. See DESIGN_DECISIONS.md (D28).
+- start.ps1.md : Windows entry — dispatches dev / setup / k8s / browser / test.
+- start.sh.md  : POSIX entry — same subcommand surface as start.ps1.
+
+### Project Notes
+These documents explain the local implementation by covering Keeps loose repository-level notes outside the formal docs set.
+- Notes.md : Keeps loose repository-level notes outside the formal docs set.
+
+### Repository Hygiene
+These documents explain which generated or machine-local artifacts must stay out of Git before normal pushes or force-push cleanups.
+- .gitignore.md : Keeps dependency caches, build output, generated frontend bundles, runtime logs, and local editor state out of version control.
+
+## Reading Hint
+- Start with the subsystem folder that owns the concern. Use `Microservice/` for C++ build, executable, module, and validation docs.

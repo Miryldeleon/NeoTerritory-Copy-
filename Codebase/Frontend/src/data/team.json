@@ -1,0 +1,70 @@
+{
+  "$schema": "neoterritory.team.v2",
+  "members": [
+    {
+      "slug": "andrew",
+      "name": "John Andrew Balbarosa",
+      "role": "Lead engineer · algorithm + microservice",
+      "bio": "Computer Science at FEU Tech. Owns the C++ pipeline — parsing, hashing, pattern dispatch, evidence emission. Believes in deterministic structural detection before any AI step. Spends his off-hours on CTF and certification grinds because he likes proof, not vibes.",
+      "photoPath": "team/andrew/portrait.jpg",
+      "skills": [
+        "TOPCIT Level 3 passer · aiming Level 5",
+        "Trend Micro University CTF — preliminary round participant",
+        "NASA Space Apps Challenge participant",
+        "FEU Tech ACM Student Chapter",
+        "Thesis lead · CodiNeo research team"
+      ],
+      "highlights": [
+        {
+          "image": "team/andrew/topcit.jpg",
+          "caption": "TOPCIT Level 3 passers list — Computer Science track, FEU Tech ACM."
+        },
+        {
+          "image": "team/andrew/ctf.jpg",
+          "caption": "Trend Micro University CTF — preliminary round certificate, Aug 22 2025."
+        },
+        {
+          "image": "team/andrew/nasa.jpg",
+          "caption": "NASA International Space Apps Challenge 2024 — Galactic Problem Solver."
+        },
+        {
+          "image": "team/andrew/hackyap.jpg",
+          "caption": "Hack & Yap with the Pizza & Friends Tech Community at Coffee Chapters."
+        },
+        {
+          "image": "team/andrew/research.jpg",
+          "caption": "Thesis working session with the research team and adviser."
+        },
+        {
+          "image": "team/andrew/thesis.jpg",
+          "caption": "Thesis title meeting with Collin Andrei Yapchulay and Josephine Santander."
+        }
+      ],
+      "links": {
+        "github": "",
+        "linkedin": "https://www.linkedin.com/in/jbalbarosa/",
+        "facebook": "https://www.facebook.com/johnandrew.balbarosa.58",
+        "website": ""
+      }
+    },
+    {
+      "slug": "miryl",
+      "name": "Miryl de Leon",
+      "role": "Research · pattern catalog + study design",
+      "bio": "Computer Science at FEU Tech. On the team she keeps the pattern catalog honest and runs the study-design loop — what gets measured, how readers actually behave, where the evidence lives.",
+      "photoPath": "team/miryl/01.jpg",
+      "skills": [
+        "FEU Tech — Computer Science",
+        "Pattern catalog curator",
+        "Study design · qualitative + reading-speed instruments"
+      ],
+      "highlights": [],
+      "links": {
+        "github": "",
+        "linkedin": "",
+        "facebook": "",
+        "website": ""
+      }
+    }
+  ]
+}

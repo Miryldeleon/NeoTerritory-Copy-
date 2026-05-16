@@ -1,0 +1,181 @@
+# legacy_builder_to_singleton_sample.cpp
+
+- Source: LegacyPatternTransformSamples/legacy_builder_to_singleton_sample.cpp
+- Kind: C++ implementation
+
+## Story
+### What Happens Here
+
+This file implements a legacy pattern-transform scenario rather than part of the current runtime engine. Its code is kept to document the older design-pattern-changing system while the active analyzer focuses on tagging evidence.
+
+### Why It Matters In The Flow
+
+These files document the older design-pattern transformation corpus rather than the current tagging-first runtime.
+
+### What To Watch While Reading
+
+Provides legacy sample source programs from the older pattern-to-pattern transform system. The main surface area is easiest to track through symbols such as Query, QueryBuilder, set_name, and set_limit. It collaborates directly with string.
+
+## Program Flow
+This diagram follows the action path in plain words. Decision diamonds show where the file can stop, branch, or repeat work instead of simply passing through a straight line.
+
+### Block 1 - Program Flow Details
+#### Slice 1 - Continue Local Flow
+```mermaid
+flowchart TD
+    N0["Begin local flow"]
+    N1["Run helper branch"]
+    N2["Set name"]
+    N3["Carry out set name"]
+    N4["Return from local helper"]
+    N5["Set limit"]
+    N6["Carry out set limit"]
+    N7["Return from local helper"]
+    N8["Prepare local model"]
+    N9["Handle build"]
+    N0 --> N1
+    N1 --> N2
+    N2 --> N3
+    N3 --> N4
+    N4 --> N5
+    N5 --> N6
+    N6 --> N7
+    N7 --> N8
+    N8 --> N9
+```
+
+#### Slice 2 - Continue Local Flow
+```mermaid
+flowchart TD
+    N0["Create local result"]
+    N1["Populate outputs"]
+    N2["Return local result"]
+    N3["Run helper branch"]
+    N4["Handle main"]
+    N5["Carry out main"]
+    N6["Return local result"]
+    N7["Return from local flow"]
+    N0 --> N1
+    N1 --> N2
+    N2 --> N3
+    N3 --> N4
+    N4 --> N5
+    N5 --> N6
+    N6 --> N7
+```
+
+## Reading Map
+Read this file as: Provides legacy sample source programs from the older pattern-to-pattern transform system.
+
+Where it sits in the run: These files document the older design-pattern transformation corpus rather than the current tagging-first runtime.
+
+Names worth recognizing while reading: Query, QueryBuilder, set_name, set_limit, build, and main.
+
+It leans on nearby contracts or tools such as string.
+
+## Story Groups
+
+### Building The Working Picture
+These steps assemble the trees, models, or bundles used by the rest of the file.
+- build(): Create the local output structure and fill local output fields
+
+### Supporting Steps
+These steps support the local behavior of the file.
+- set_name(): Owns a focused local responsibility.
+- set_limit(): Owns a focused local responsibility.
+- main(): Owns a focused local responsibility.
+
+## Function Stories
+
+### set_name()
+This routine owns one focused piece of the file's behavior.
+
+What it does:
+- This routine is primarily structural and does not expose obvious runtime operations from static inspection.
+
+Flow:
+```mermaid
+flowchart TD
+    Start["set_name()"]
+    N0["Set name"]
+    N1["Execute file-local step"]
+    N2["Hand back"]
+    End["Return"]
+    Start --> N0
+    N0 --> N1
+    N1 --> N2
+    N2 --> End
+```
+
+### set_limit()
+This routine owns one focused piece of the file's behavior.
+
+What it does:
+- This routine is primarily structural and does not expose obvious runtime operations from static inspection.
+
+Flow:
+```mermaid
+flowchart TD
+    Start["set_limit()"]
+    N0["Set limit"]
+    N1["Execute file-local step"]
+    N2["Hand back"]
+    End["Return"]
+    Start --> N0
+    N0 --> N1
+    N1 --> N2
+    N2 --> End
+```
+
+### build()
+This routine assembles a larger structure from the inputs it receives.
+
+Inside the body, it mainly handles Create the local output structure and fill local output fields.
+
+The caller receives a computed result or status from this step.
+
+What it does:
+- Create the local output structure
+- fill local output fields
+
+Flow:
+```mermaid
+flowchart TD
+    Start["build()"]
+    N0["Handle build"]
+    N1["Create local result"]
+    N2["Populate outputs"]
+    N3["Return local result"]
+    End["Return"]
+    Start --> N0
+    N0 --> N1
+    N1 --> N2
+    N2 --> N3
+    N3 --> End
+```
+
+### main()
+This routine owns one focused piece of the file's behavior.
+
+The caller receives a computed result or status from this step.
+
+What it does:
+- This routine is primarily structural and does not expose obvious runtime operations from static inspection.
+
+Flow:
+```mermaid
+flowchart TD
+    Start["main()"]
+    N0["Handle main"]
+    N1["Execute file-local step"]
+    N2["Return local result"]
+    End["Return"]
+    Start --> N0
+    N0 --> N1
+    N1 --> N2
+    N2 --> End
+```
+
+## Documentation Note
+- This markdown file is part of the generated docs/Codebase mirror.
+- It was generated from the repository state on 2026-04-23 after reading the existing docs corpus and the current source tree.
